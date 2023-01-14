@@ -1,0 +1,11 @@
+{
+	"editor.suggest.snippetsPreventQuickSuggestions": false,
+	"aiXcoder.showTrayIcon": true,
+	"files.associations": {
+		"*.S": "gas",
+		"*.h": "c",
+		"atomic": "c",
+		"compare": "c",
+		"cstdint": "c"
+	}
+}
