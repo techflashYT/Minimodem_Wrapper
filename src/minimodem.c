@@ -23,9 +23,9 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	close(mkstemp(tmpDataFile));
 	close(mkstemp(stderrLog));
 
+	errno = 0; // reset errno in case it got messed up by something else
 	FILE *fp = fdopen(mkstemp(tmpScriptName), "w+");
 	char modeChar = '\0';
-	errno = 0; // reset errno in case it got messed up by something else
 	if (fp == 0 || errno != 0) {
 		fprintf(stderr, "%sFailed to open temporary file!%s\r\nDebug Info:\r\n- Return Value: %p\r\n", RED, RESET, fp);
 		perror("- perror()");
@@ -91,7 +91,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		fread(file, size, 1, fp);
 		fclose(fp);
 	}
-	
+
 	remove(stderrLog);
 	remove(tmpDataFile);
 	remove(tmpScriptName);
