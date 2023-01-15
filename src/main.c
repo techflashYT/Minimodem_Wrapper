@@ -1,38 +1,47 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <minimodem.h>
+char   *handshakeStr      = "Techflash Software Minimodem Wrapper\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"; // banking on at least *1* of these zeroes has to go through, even if it's noisy, because otherwise, we're screwed, the listen program will just run off into junk
+char   *resendStr         = "RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND_RESEND"; // we check for the word "RESEND", so it's very likely that at least one of these will go through correctly, otherwise, we're screwed
+uint8_t*handshakeFileName = "/tmp/TechflashMinimodemTmp_XXXXXX";
+uint8_t*resendFileName    = "/tmp/TechflashMinimodemTmp_XXXXXX";
 int main(int argc, char* argv[]) {
-	printf("\x1b[1;33mTechflash\x1b[0m \x1b[1;36mMiniModem Data Transfer Wrapper \x1b[0m\x1b[32mv%u.%u.%u\x1b[0m\r\n", VER_MA, VER_MI, VER_PA);
+	printf("%sTechflash%s %sMiniModem Data Transfer Wrapper %sv%u.%u.%u\x1b[0m\r\n", B_YEL, RESET, B_CYAN, RESET GREEN, VER_MA, VER_MI, VER_PA);
 	options_t opts = figureOutArgs(argc, argv);
-	printf("\x1b[0m\x1b[32mOptions Parsed\x1b[0m\r\n");
-	// TODO: Check if any of the options aren't set.
-	char fMode[3] = {0, 0, 0};
-	if (opts.mode == MODE_RECEIVE) {
-		fMode[0] = 'w';
-		fMode[1] = '+';
+	printf("%sOptions Parsed%s\r\n", RESET GREEN, RESET);
+	FILE   *handshakeFile     = fdopen(mkstemp(handshakeFileName), "w+");
+	FILE   *resendFile        = fdopen(mkstemp(resendFileName), "w+");
+	fwrite(handshakeStr, 54, 1, handshakeFile);
+	fwrite(resendStr, strlen(resendStr), 1, resendFile);
+	fclose(handshakeFile);
+	fclose(resendFile);
+	// CL_HSTART
+	printf("Sending CL_HSTART...\r\n");
+	minimodem(handshakeFileName, 54, MODE_TRANSMIT, 120, 0);
+	printf("Sent CL_HSTART!\r\n");
+	// SV_HSTART response?
+	uint8_t *readBuf = malloc(256);
+	bool SV_HSTART_worked = false;
+	for (uint8_t i = 0; i != 5 && (!SV_HSTART_worked); i++) {
+		printf("Waiting for SV_HSTART (attempt %u)\r\n", i);
+		minimodem(readBuf, 256, MODE_RECEIVE, 120, 2.25);
+		if (strncmp(readBuf, handshakeStr, strlen(handshakeStr)) == 0) {
+			SV_HSTART_worked = true;
+			break;
+		}
+		minimodem(resendStr, 256, MODE_TRANSMIT, 120, 2.25);
 	}
-	if (opts.mode == MODE_TRANSMIT) {
-		fMode[0] = 'r';
-	}
-	FILE *fd = fopen(opts.fileName, fMode);
-	if (fd == NULL) {
-		fputs("\x1b[31mERROR\x1b[0m: File does not exist!\r\n", stderr);
+	if (!SV_HSTART_worked) {
+		fprintf(stderr, "%sOther machine never initiated handshake!  %sAre you running this program on both machines?  %sIf you are, maybe check if your setup works properly %s(see wiki)%s.%s\r\n", RED, B_CYAN, RESET RED, RESET, RED, RESET);
+		free(readBuf);
 		abort();
 	}
-	size_t size = 65535;
-	if (opts.mode == MODE_TRANSMIT) {
-		fseek(fd, 0, SEEK_END);
-		size = ftell(fd);
-		fseek(fd, 0, SEEK_SET);
-	}
-	uint8_t *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fileno(fd), 0);
-	// handshake
-	char *handshakeStr = "Techflash Software Minimodem Wrapper";
-	minimodem(handshakeStr, strlen(handshakeStr), MODE_TRANSMIT, 10, 0); // confidence doesn't matter for sending, but the receiving end needs to wait for the handshake start
-	minimodem(addr, size, opts.mode, opts.baudRate, opts.confidence);
-	munmap(addr, size);
-	fclose(fd);
+
+	// minimodem(addr, size, opts.mode, opts.baudRate, opts.confidence);
+	// munmap(addr, size);
+	remove(handshakeFileName);
+	free(readBuf);
 	return 0;
 }

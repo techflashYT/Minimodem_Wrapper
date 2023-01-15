@@ -1,107 +1,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 #include <minimodem.h>
 #include <errno.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-bool minimodem(uint8_t *data, size_t size, bool mode, uint16_t baudRate, double confidence) {
+bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence) {
 	char *command = malloc(300 + size);
-	if (command == NULL) {
-		fprintf(stderr, "\x1b[31mmalloc() call failed to allocate memory for file\x1b[0m.  Are you out of memory?\r\n");
-		abort();
-	}
 	char *buffer  = malloc(size);
-	if (buffer == NULL) {
-		fprintf(stderr, "\x1b[31mmalloc() call failed to allocate memory for file\x1b[0m.  Are you out of memory?\r\n");
-		abort();
-	}
-	strcpy(command, "cat << THIS_LINE_RIGHT_HERE_THAT_NOTHING_ELSE_WILL_EVER_USE_IS_THE_END_OF_THE_FILE | minimodem -");
-	if (mode == MODE_RECEIVE) {
-		strcpy(command + strlen(command), "r ");
-	}
-	else if (mode == MODE_TRANSMIT) {
-		strcpy(command + strlen(command), "t ");
-	}
-	sprintf(command + strlen(command), "%u", baudRate);
-	strcpy(command + strlen(command), " -c ");
 	char *confBuf = malloc(10);
-	if (confBuf == NULL) {
-		fprintf(stderr, "\x1b[31mmalloc() call failed to allocate memory for file\x1b[0m.  Are you out of memory?\r\n");
+	char *pipeStr = malloc(128);
+	if (buffer == NULL || command == NULL || confBuf == NULL || pipeStr == NULL) {
+		fprintf(stderr, "%smalloc() call failed!%s.  Are you out of memory?\r\n", RED, RESET);
 		abort();
 	}
-	sprintf(confBuf, "%.3f", confidence);
-	strcpy(command + strlen(command), confBuf);
-	free(confBuf);
-
-	char stdoutLog[] = "/tmp/TechflashMinimodemTmp_XXXXXX";
-	mkstemp(stdoutLog);
-	char stderrLog[] = "/tmp/TechflashMinimodemTmp_XXXXXX";
-	mkstemp(stderrLog);
+	char tmpDataFile[]   = "/tmp/TechflashMinimodemTmp_XXXXXX";
+	char stderrLog[]     = "/tmp/TechflashMinimodemTmp_XXXXXX";
 	char tmpScriptName[] = "/tmp/TechflashMinimodemTmp_XXXXXX";
-	mkstemp(tmpScriptName);
-	strcpy(command + strlen(command), " 2> >(tee ");
-	strcpy(command + strlen(command), stderrLog);
-	strcpy(command + strlen(command), " >&2) > ");
-	strcpy(command + strlen(command), stdoutLog);
-	strcpy(command + strlen(command), "\r\n");
-	size_t curSize = strlen(command);
-	memcpy(command + curSize, data, size);
-	command[curSize + size] = '\0';
-	strcpy(command + strlen(command), "\r\nTHIS_LINE_RIGHT_HERE_THAT_NOTHING_ELSE_WILL_EVER_USE_IS_THE_END_OF_THE_FILE\r\n");
-
-	chmod(tmpScriptName, 0777);
+	// we close those 2 instantly, since we don't need them open, the shell script will be using them.
+	close(mkstemp(tmpDataFile));
+	close(mkstemp(stderrLog));
+	FILE *fp = fdopen(mkstemp(tmpScriptName), "w+");
+	char modeChar = '\0';
 	errno = 0; // reset errno in case it got messed up by something else
-	FILE *fp = fopen(tmpScriptName, "w+");
 	if (fp == 0 || errno != 0) {
-		fprintf(stderr, "\x1b[31mFailed to open temporary file!\x1b[0m\r\nDebug Info:\r\n- Return Value: %p\r\n", fp);
+		fprintf(stderr, "%sFailed to open temporary file!%s\r\nDebug Info:\r\n- Return Value: %p\r\n", RED, RESET, fp);
 		perror("- perror()");
 		remove(stderrLog);
-		remove(stdoutLog);
-		// remove(tmpScriptName);
-		abort();
-	}
-	errno = 0; // reset errno in case it got messed up by something else
-	int ret = fwrite(command, 300 + size, 1, fp);
-	if (ret != 1 || errno != 0) {
-		fprintf(stderr, "\x1b[31mFailed to write temporary file!\x1b[0m\r\nDebug Info:\r\n- Return Value: %d\r\n", ret);
-		perror("- perror()");
-		remove(stderrLog);
-		remove(stdoutLog);
+		remove(tmpDataFile);
 		remove(tmpScriptName);
 		abort();
 	}
-	ret = fclose(fp);
+	if      (mode == MODE_RECEIVE)  {modeChar = 'r';}
+	else if (mode == MODE_TRANSMIT) {modeChar = 't';}
+	// if we're receiving, don't send anything to minimodem's stdin.
+	pipeStr[0] = '\0';
+	if (mode == MODE_TRANSMIT) {sprintf(pipeStr, "cat %s | ", (char *)file);}
+	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one 2> >(tee %s >&2) > %s\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
+	free(confBuf);
+	chmod(tmpScriptName, 0777);
+	errno = 0; // reset errno in case it got messed up by something else
+	int ret = fclose(fp);
 	if (ret != 0 || errno != 0) {
-		fprintf(stderr, "\x1b[31mFailed to close temporary file!\x1b[0m\r\nDebug Info:\r\n- Return Value: %d\r\n", ret);
+		fprintf(stderr, "%sFailed to close temporary file!%s\r\nDebug Info:\r\n- Return Value: %d\r\n", RED, RESET, ret);
 		perror("- perror()");
 		remove(stderrLog);
-		remove(stdoutLog);
+		remove(tmpDataFile);
 		remove(tmpScriptName);
 		abort();
 	}
 
 	ret = system(tmpScriptName);
-	sleep(50000);
 	int errnoBak = errno;
 	if (ret != 0) {
-		fprintf(stderr, "\x1b[31mError running minimodem!\x1b[0m  Perhaps it's not installed?\r\nDebug Info:\r\n- Return Value: %u\r\n", (uint8_t)ret);
+		fprintf(stderr, "%sError running minimodem!%s  Perhaps it's not installed?\r\nDebug Info:\r\n- Return Value: %u\r\n", RED, RESET, (uint8_t)ret);
 		errno = errnoBak;
 		perror("- perror()");
 		remove(stderrLog);
-		remove(stdoutLog);
+		remove(tmpDataFile);
 		remove(tmpScriptName);
 		abort();
 	}
-	FILE *fd = fopen(stderrLog, "r");
-	fread(buffer, size, 1, fd);
+	// clean up temp variables
 	free(command);
 	free(buffer);
+	free(pipeStr);
+	// were we trying to read data?  if so, `file` is a buffer, and `size` is it's size
+	if (mode == MODE_RECEIVE) {
+		fp = fopen(tmpDataFile, "r");
+		// get file size
+		fseek(fp, 0, SEEK_END);
+		size_t sizeOfFile = ftell(fp);
+		fseek(fp, 0, SEEK_SET);
+		memset(file, '\0', size);
+		if (sizeOfFile > size) {
+			// size of the file is bigger than expected!  abort before we blow past the end of the buffer
+			fprintf(stderr, "%sUh oh!  We received %s%lu%s more bytes than we have room for!  Aborting before bad things happen!%s\r\n", RED, B_CYAN, sizeOfFile - size, RED, RESET);
+			abort();
+		}
+		fread(file, size, 1, fp);
+		fclose(fp);
+	}
 	remove(stderrLog);
-	remove(stdoutLog);
+	remove(tmpDataFile);
 	remove(tmpScriptName);
+	return true;
 }

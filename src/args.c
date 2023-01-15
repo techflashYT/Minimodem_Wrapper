@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <minimodem.h>
 options_t retVal;
@@ -22,21 +22,21 @@ options_t figureOutArgs(int argc, char *argv[]) {
 	memset(&retVal, '\0', sizeof(retVal));
 	retVal.fileName = argv[1];
 	if (argv[2][0] != 'r' && argv[2][0] != 't') {
-		fputs("\x1b[31mERROR\x1b[0m: Transmit/Receive value must be exactly `t\' or `r\'.\r\n", stderr);
+		fprintf(stderr, "%sTransmit/Receive value must be exactly %s`%st%s\'%s or %s`%sr%s\'%s.%s\r\n", RED, RESET, B_CYAN, RESET, RED, RESET, B_CYAN, RESET, RED, RESET);
 		abort();
 	}
 	if      (argv[2][0] == 'r') {retVal.mode = MODE_RECEIVE;}
 	else if (argv[2][0] == 't') {retVal.mode = MODE_TRANSMIT;}
 	for (uint16_t i = 0; i != strlen(argv[3]); i++) {
 		if (!(isdigit(argv[3][i])) && argv[3][i] != '.') {
-			fputs("\x1b[31mERROR\x1b[0m: third argument must be an integer or decimal number.", stderr);
+			fprintf(stderr, "%sThird argument must be an %sinteger or decimal number%s.%s\r\n", RED, B_CYAN, RED, RESET);
 			abort();
 		}
 	}
 	retVal.baudRate   = atoi(argv[3]);
 	for (uint16_t i = 0; i != strlen(argv[4]); i++) {
 		if (!(isdigit(argv[4][i])) && argv[4][i] != '.') {
-			fputs("\x1b[31mERROR\x1b[0m: fourth argument must be an integer or decimal number.", stderr);
+			fprintf(stderr, "%sFourth argument must be an %sinteger or decimal number%s.%s\r\n", RED, B_CYAN, RED, RESET);
 			abort();
 		}
 	}

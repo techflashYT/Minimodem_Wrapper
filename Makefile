@@ -1,5 +1,5 @@
 CC       = core2-gcc # yes I actually need a custom gcc for this because  all of my static libs are from gentoo, so they won't run on anything but my CPU
-WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security
+WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign
 FEATURE  = -fdiagnostics-color=always -fstack-protector-all -fsanitize=address,undefined -march=core2
 INCLUDES = -Isrc/include
 GLIBCDIR = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib
