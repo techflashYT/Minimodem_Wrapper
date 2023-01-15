@@ -9,18 +9,22 @@ uint8_t*handshakeFileName = "/tmp/TechflashMinimodemTmp_XXXXXX";
 uint8_t*resendFileName    = "/tmp/TechflashMinimodemTmp_XXXXXX";
 int main(int argc, char* argv[]) {
 	printf("%sTechflash%s %sMiniModem Data Transfer Wrapper %sv%u.%u.%u\x1b[0m\r\n", B_YEL, RESET, B_CYAN, RESET GREEN, VER_MA, VER_MI, VER_PA);
+
 	options_t opts = figureOutArgs(argc, argv);
 	printf("%sOptions Parsed%s\r\n", RESET GREEN, RESET);
+
 	FILE   *handshakeFile     = fdopen(mkstemp(handshakeFileName), "w+");
 	FILE   *resendFile        = fdopen(mkstemp(resendFileName), "w+");
 	fwrite(handshakeStr, 54, 1, handshakeFile);
 	fwrite(resendStr, strlen(resendStr), 1, resendFile);
 	fclose(handshakeFile);
 	fclose(resendFile);
+
 	// CL_HSTART
 	printf("Sending CL_HSTART...\r\n");
 	minimodem(handshakeFileName, 54, MODE_TRANSMIT, 120, 0);
 	printf("Sent CL_HSTART!\r\n");
+	
 	// SV_HSTART response?
 	uint8_t *readBuf = malloc(256);
 	bool SV_HSTART_worked = false;

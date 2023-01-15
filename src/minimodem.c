@@ -10,16 +10,19 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	char *buffer  = malloc(size);
 	char *confBuf = malloc(10);
 	char *pipeStr = malloc(128);
+
 	if (buffer == NULL || command == NULL || confBuf == NULL || pipeStr == NULL) {
 		fprintf(stderr, "%smalloc() call failed!%s.  Are you out of memory?\r\n", RED, RESET);
 		abort();
 	}
+
 	char tmpDataFile[]   = "/tmp/TechflashMinimodemTmp_XXXXXX";
 	char stderrLog[]     = "/tmp/TechflashMinimodemTmp_XXXXXX";
 	char tmpScriptName[] = "/tmp/TechflashMinimodemTmp_XXXXXX";
 	// we close those 2 instantly, since we don't need them open, the shell script will be using them.
 	close(mkstemp(tmpDataFile));
 	close(mkstemp(stderrLog));
+
 	FILE *fp = fdopen(mkstemp(tmpScriptName), "w+");
 	char modeChar = '\0';
 	errno = 0; // reset errno in case it got messed up by something else
@@ -31,14 +34,19 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		remove(tmpScriptName);
 		abort();
 	}
+
 	if      (mode == MODE_RECEIVE)  {modeChar = 'r';}
 	else if (mode == MODE_TRANSMIT) {modeChar = 't';}
+
 	// if we're receiving, don't send anything to minimodem's stdin.
 	pipeStr[0] = '\0';
 	if (mode == MODE_TRANSMIT) {sprintf(pipeStr, "cat %s | ", (char *)file);}
 	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one 2> >(tee %s >&2) > %s\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
+
 	free(confBuf);
+
 	chmod(tmpScriptName, 0777);
+
 	errno = 0; // reset errno in case it got messed up by something else
 	int ret = fclose(fp);
 	if (ret != 0 || errno != 0) {
@@ -61,10 +69,12 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		remove(tmpScriptName);
 		abort();
 	}
+
 	// clean up temp variables
 	free(command);
 	free(buffer);
 	free(pipeStr);
+
 	// were we trying to read data?  if so, `file` is a buffer, and `size` is it's size
 	if (mode == MODE_RECEIVE) {
 		fp = fopen(tmpDataFile, "r");
@@ -81,6 +91,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		fread(file, size, 1, fp);
 		fclose(fp);
 	}
+	
 	remove(stderrLog);
 	remove(tmpDataFile);
 	remove(tmpScriptName);
