@@ -5,6 +5,9 @@
 #include <minimodem.h>
 #include <errno.h>
 #include <sys/stat.h>
+char *tmpDataFile;
+char *stderrLog;
+char *tmpScriptName;
 bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence) {
 	char *command = malloc(300 + size);
 	char *buffer  = malloc(size);
@@ -16,9 +19,12 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		abort();
 	}
 
-	char tmpDataFile[]   = "/tmp/TechflashMinimodemTmp_XXXXXX";
-	char stderrLog[]     = "/tmp/TechflashMinimodemTmp_XXXXXX";
-	char tmpScriptName[] = "/tmp/TechflashMinimodemTmp_XXXXXX";
+	tmpDataFile   = malloc(34);
+	stderrLog     = malloc(34);
+	tmpScriptName = malloc(34);
+	strcpy(tmpDataFile, "/tmp/TechflashMinimodemTmp_XXXXXX");
+	strcpy(stderrLog, "/tmp/TechflashMinimodemTmp_XXXXXX");
+	strcpy(tmpScriptName, "/tmp/TechflashMinimodemTmp_XXXXXX");
 	// we close those 2 instantly, since we don't need them open, the shell script will be using them.
 	close(mkstemp(tmpDataFile));
 	close(mkstemp(stderrLog));
@@ -74,7 +80,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	free(command);
 	free(buffer);
 	free(pipeStr);
-
+	
 	// were we trying to read data?  if so, `file` is a buffer, and `size` is it's size
 	if (mode == MODE_RECEIVE) {
 		fp = fopen(tmpDataFile, "r");
@@ -93,7 +99,10 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	}
 
 	remove(stderrLog);
+	free(stderrLog);
 	remove(tmpDataFile);
+	free(tmpDataFile);
 	remove(tmpScriptName);
+	free(tmpScriptName);
 	return true;
 }

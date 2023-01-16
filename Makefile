@@ -3,7 +3,7 @@ WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror 
 FEATURE  = -fdiagnostics-color=always -fstack-protector-all -fsanitize=address,undefined -march=core2
 INCLUDES = -Isrc/include
 GLIBCDIR = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib
-CFLAGS   = $(WARN) $(FEATURE) $(INCLUDES) -g -std=gnu2x -L$(GLIBCDIR)
+CFLAGS   = $(WARN) $(FEATURE) $(INCLUDES) -g -Ofast -std=gnu2x -L$(GLIBCDIR)
 # CRTFILES1= $(GLIBCDIR)/crt1.o $(GLIBCDIR)/crti.o `gcc --print-file-name=crtbegin.o`
 # CRTFILES2= `gcc --print-file-name=crtend.o` $(GLIBCDIR)/crtn.o
 # JUNKFLAG = -Wl,--start-group $(GLIBCDIR)/libc.a -lgcc -lgcc_eh -lm -Wl,--end-group
