@@ -29,6 +29,7 @@ dirs:
 	@$(shell mkdir -p bin build/menu)
 
 build/%.o: %.c $(shell find src/include -type f)
+	@mkdir -p $(@D)
 	@echo "CC    $< => $@"
 	@$(CC) $(CFLAGS) -c $< -o $@
 

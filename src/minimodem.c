@@ -47,7 +47,16 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	// if we're receiving, don't send anything to minimodem's stdin.
 	pipeStr[0] = '\0';
 	if (mode == MODE_TRANSMIT) {sprintf(pipeStr, "cat %s | ", (char *)file);}
-	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one 2> >(tee %s >&2) > %s\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
+	// DEBUG STUFF REMOVE THIS LATER
+	if (mode == MODE_TRANSMIT) {
+		FILE *junkfp = fopen(file, "r");
+		uint8_t *dataStuff = malloc(2048);
+		memset(dataStuff, 0, 2048);
+		fread(dataStuff, 2048, 1, junkfp);
+		fclose(junkfp);
+		printf("Sending the following data:\r\n=====================\r\n%s\r\n=====================\r\n", dataStuff);
+	}
+	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one 2> >(tee %s >&2) > >(tee %s >&1)\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
 
 	free(confBuf);
 

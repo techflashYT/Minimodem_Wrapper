@@ -1,8 +1,11 @@
+#pragma once
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #define MODE_TRANSMIT true
 #define MODE_RECEIVE  false
+#define handshakeBaudRate   ((uint16_t)100)
+#define handshakeConfidence ((double)2.25)
 bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence);
 typedef struct {
 	uint16_t baudRate;
@@ -11,6 +14,16 @@ typedef struct {
 	char    *fileName;
 } options_t;
 options_t figureOutArgs(int argc, char *argv[]);
+void handshakeSv();
+void handshakeCl();
+extern char   *handshakeStr;
+extern char   *resendStr;
+extern uint8_t*handshakeFileName;
+extern uint8_t*resendFileName;
+extern FILE   *handshakeFile;
+extern FILE   *resendFile;
+extern uint8_t*readBuf;
+extern options_t opts;
 #define VER_MA (0)
 #define VER_MI (1)
 #define VER_PA (0)
