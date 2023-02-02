@@ -12,9 +12,9 @@ vpath %.c src
 vpath %.c src/menu
 vpath %.h src/include
 SHELL=/bin/bash
-compile := $(patsubst src/%.c,build/%.o,$(shell find src -name '*.c'))
-
-
+compile  := $(patsubst src/%.c,build/%.o,$(shell find src -name '*.c'))
+# compile  += "build/libs/reed-solomon-ecc/rs.c"
+includes := $(shell find src/include -type f)
 outFileName=tfModemTransfer
 
 .SUFFIXES: .c .o
@@ -28,10 +28,15 @@ bin/$(outFileName): $(compile)
 dirs:
 	@$(shell mkdir -p bin build/menu)
 
-build/%.o: %.c $(shell find src/include -type f)
+build/%.o: %.c $(includes)
 	@mkdir -p $(@D)
 	@echo "CC    $< => $@"
 	@$(CC) $(CFLAGS) -c $< -o $@
+build/libs/reed-solomon-ecc/rs.o: src/libs/reed-solomon-ecc/rs.c
+	@mkdir -p $(@D)
+	@echo "CC    $< => $@"
+# use the creator's recommended cflags
+	@$(CC) -O0 -g -std=gnu99 -c src/libs/reed-solomon-ecc/rs.c -o $@
 
 clean:
 	@rm -rf build bin

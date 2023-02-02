@@ -1,0 +1,2 @@
+I got these files from https://github.com/jannson/reedsolomon-c
+They are licensed via the MIT License (see LICENSE.txt)1

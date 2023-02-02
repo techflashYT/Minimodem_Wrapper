@@ -1,20 +1,8 @@
+#include <minimodem.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <minimodem.h>
-#include <stdint.h>
-extern char   *handshakeStr;
-extern char   *resendStr;
-extern uint8_t*handshakeFileName;
-extern uint8_t*resendFileName;
-extern uint8_t*readBuf;
-void handshakeCl() {
-	printf("Running as %sclient%s.\r\n", B_CYAN, RESET);
-	// CL_HSTART
-	printf("Sending CL_HSTART...\r\n");
-	minimodem(handshakeFileName, 54, MODE_TRANSMIT, handshakeBaudRate, 0);
-	printf("Sent CL_HSTART!\r\n");
-	// SV_HSTART response?
+void rxSV_HSTART() {
 	bool SV_HSTART_worked = false;
 	for (uint8_t i = 0; i != 5; i++) {
 		printf("Waiting for SV_HSTART (attempt %u)\r\n", i);
@@ -22,8 +10,7 @@ void handshakeCl() {
 		if (strstr(readBuf, "RESEND") != 0) {// contains RESEND
 			// resend
 			printf("Server asked for resend, sending handshake again...\r\n");
-			minimodem(handshakeFileName, 54, MODE_TRANSMIT, handshakeBaudRate, 0);
-			printf("Sent\r\n");
+			txCL_HSTART();
 			continue;
 		}
 		if (strncmp(readBuf, handshakeStr, strlen(handshakeStr)) == 0) {
@@ -37,7 +24,8 @@ void handshakeCl() {
 	if (!SV_HSTART_worked) {
 		fprintf(stderr, "%sServer never initiated handshake!  %sAre you running this program on both machines?  %sIf you are, maybe check if your setup works properly %s(see wiki)%s.%s\r\n", RED, B_CYAN, RESET RED, RESET, RED, RESET);
 		free(readBuf);
-		abort();
+		free(opts.additionalArgs);
+		exit(1);
 	}
 	printf("SV_HSTART received!\r\n");
 }

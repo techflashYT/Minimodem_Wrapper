@@ -8,6 +8,15 @@
 char *tmpDataFile;
 char *stderrLog;
 char *tmpScriptName;
+#define cleanupAndFail()\
+	remove(stderrLog);\
+	remove(tmpDataFile);\
+	remove(tmpScriptName);\
+	free(command);\
+	free(buffer);\
+	free(pipeStr);\
+	exit(1);
+
 bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence) {
 	char *command = malloc(300 + size);
 	char *buffer  = malloc(size);
@@ -16,7 +25,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 
 	if (buffer == NULL || command == NULL || confBuf == NULL || pipeStr == NULL) {
 		fprintf(stderr, "%smalloc() call failed!%s.  Are you out of memory?\r\n", RED, RESET);
-		abort();
+		exit(1);
 	}
 
 	tmpDataFile   = malloc(34);
@@ -35,10 +44,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	if (fp == 0 || errno != 0) {
 		fprintf(stderr, "%sFailed to open temporary file!%s\r\nDebug Info:\r\n- Return Value: %p\r\n", RED, RESET, fp);
 		perror("- perror()");
-		remove(stderrLog);
-		remove(tmpDataFile);
-		remove(tmpScriptName);
-		abort();
+		cleanupAndFail();
 	}
 
 	if      (mode == MODE_RECEIVE)  {modeChar = 'r';}
@@ -55,8 +61,9 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		fread(dataStuff, 2048, 1, junkfp);
 		fclose(junkfp);
 		printf("Sending the following data:\r\n=====================\r\n%s\r\n=====================\r\n", dataStuff);
+		free(dataStuff);
 	}
-	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one 2> >(tee %s >&2) > >(tee %s >&1)\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
+	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one --startbits 2 --stopbits 2 2> >(tee %s >&2) > >(tee %s >&1)\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
 
 	free(confBuf);
 
@@ -67,10 +74,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 	if (ret != 0 || errno != 0) {
 		fprintf(stderr, "%sFailed to close temporary file!%s\r\nDebug Info:\r\n- Return Value: %d\r\n", RED, RESET, ret);
 		perror("- perror()");
-		remove(stderrLog);
-		remove(tmpDataFile);
-		remove(tmpScriptName);
-		abort();
+		cleanupAndFail();
 	}
 
 	ret = system(tmpScriptName);
@@ -79,10 +83,7 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		fprintf(stderr, "%sError running minimodem!%s  Perhaps it's not installed?\r\nDebug Info:\r\n- Return Value: %u\r\n", RED, RESET, (uint8_t)ret);
 		errno = errnoBak;
 		perror("- perror()");
-		remove(stderrLog);
-		remove(tmpDataFile);
-		remove(tmpScriptName);
-		abort();
+		cleanupAndFail();
 	}
 
 	// clean up temp variables
@@ -101,7 +102,14 @@ bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double 
 		if (sizeOfFile > size) {
 			// size of the file is bigger than expected!  abort before we blow past the end of the buffer
 			fprintf(stderr, "%sUh oh!  We received %s%lu%s more bytes than we have room for!  Aborting before bad things happen!%s\r\n", RED, B_CYAN, sizeOfFile - size, RED, RESET);
-			abort();
+			fclose(fp);
+			remove(stderrLog);
+			free(stderrLog);
+			remove(tmpDataFile);
+			free(tmpDataFile);
+			remove(tmpScriptName);
+			free(tmpScriptName);
+			exit(1);
 		}
 		fread(file, size, 1, fp);
 		fclose(fp);

@@ -7,5 +7,9 @@
 		"atomic": "c",
 		"compare": "c",
 		"cstdint": "c"
-	}
+	},
+	"cSpell.words": [
+		"Minimodem",
+		"Techflash"
+	]
 }
