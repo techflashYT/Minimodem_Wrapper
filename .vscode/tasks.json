@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: build project",
+			"command": "make",
+			"args": [],
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"env": {
+					// "PATH": ""
+				}
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/bin/gcc"
+		}
+	]
+}

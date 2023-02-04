@@ -18,15 +18,15 @@ includes := $(shell find src/include -type f)
 outFileName=tfModemTransfer
 
 .SUFFIXES: .c .o
-all: dirs bin/$(outFileName)
+all: checkEnv bin/$(outFileName)
 	@echo "Built!"
-
+checkEnv:
+	@if ! ( command -v core2-gcc &> /dev/null); then PATH="/opt/TechflashSoftware/crossCompiler/bin/:$$PATH" make; fi
 bin/$(outFileName): $(compile)
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(CRTFILES1) $^ $(JUNKFLAG) $(CRTFILES2) -o $@
 
 
-dirs:
-	@$(shell mkdir -p bin build/menu)
 
 build/%.o: %.c $(includes)
 	@mkdir -p $(@D)
