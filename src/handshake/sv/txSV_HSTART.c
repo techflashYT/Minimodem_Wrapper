@@ -7,22 +7,24 @@ void txSV_HSTART() {
 	for (uint8_t i = 0; i != 5; i++) {
 		printf("Sending SV_HSTART (attempt %u)\r\n", i);
 		puts("Sending SV_HSTART...");
-		minimodem(handshakeFileName, 54, MODE_TRANSMIT, handshakeBaudRate, 0);
+		minimodem(handshakeStr, strlen(handshakeStr), MODE_TRANSMIT, handshakeBaudRate, 0);
 		puts("Sent SV_HSTART!");
-		minimodem(readBuf, 256, MODE_RECEIVE, handshakeBaudRate, handshakeConfidence);
+		minimodem(readBuf, strlen(allGoodStr), MODE_RECEIVE, handshakeBaudRate, handshakeConfidence);
 		if (strncmp(readBuf, allGoodStr, strlen(allGoodStr)) == 0) {
 			sentSV_HSTART = true;
 			break;
 		}
+		readBuf[4095] = '\0';
 		if (strstr(readBuf, "RESEND") != 0) {// contains RESEND
+			globalParityOffset += 15;
 			// resend
 			puts("Client asked for resend, sending handshake again...");
-			minimodem(handshakeFileName, 54, MODE_TRANSMIT, handshakeBaudRate, 0);
+			minimodem(handshakeStr, strlen(handshakeStr), MODE_TRANSMIT, handshakeBaudRate, 0);
 			puts("Sent");
 			continue;
 		}
-		printf("Huh?  We got \"\"\"%s\"\"\" when we expected \"\"\"%s\"\"\".  Retrying...\r\n", readBuf, handshakeStr);
-		minimodem(resendFileName, 256, MODE_TRANSMIT, handshakeBaudRate, handshakeConfidence);
+		printf("Huh?  We got nonsense when we expected \"\"\"%s\"\"\".  Retrying...\r\n", handshakeStr);
+		minimodem(resendStr, 256, MODE_TRANSMIT, handshakeBaudRate, handshakeConfidence);
 	}
 	if (!sentSV_HSTART) {
 		fprintf(stderr, "%sClient never confirmed SV_HSTART!  %sCheck your connection and try again.%s\r\n", RED, B_CYAN, RESET);

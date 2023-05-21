@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <bits/types/FILE.h>
 #define MODE_TRANSMIT true
 #define MODE_RECEIVE  false
 #define handshakeBaudRate   ((uint16_t)40)
@@ -12,11 +11,24 @@ typedef struct {
 	void *rsPtr;
 	uint16_t parityBytes;
 } __ecc_t;
+// ecc_t is a pointer to the above struct
 typedef __ecc_t *ecc_t;
+// creates an ecc_t struct with the correct values
 ecc_t   eccCreate  (uint8_t parityPercent, size_t dataSize);
-size_t  eccEncode  (ecc_t rs, void *data, size_t dataSize, uint8_t **encodedDataPtr);
-void    eccDestroy (ecc_t rs);
-size_t  eccDecode  (ecc_t rs, uint8_t *encodedData, size_t dataSize, uint8_t **decodedDataPtr);
+/*
+	encodes data based on the data pointer and size.
+	encodedDataPtr is set the the pointer of the encoded data.
+	returns the size of the data + ECC info
+*/
+size_t  eccEncode  (ecc_t ecc, void *data, size_t dataSize, uint8_t **encodedDataPtr);
+/*
+	decodes ECC data based on the encoded data pointer and encoded size.
+	decodedDataPtr is set the the pointer of the decoded data.
+	returns the size of the data
+*/
+size_t  eccDecode  (ecc_t ecc, uint8_t *encodedData, size_t dataSize, uint8_t **decodedDataPtr);
+// cleans up the ecc_t struct.  Do not attempt to use the variable after calling this function.
+void    eccDestroy (ecc_t ecc);
 typedef struct {
 	uint16_t baudRate;
 	float    confidence;
@@ -33,10 +45,6 @@ extern void txCL_HSTART();
 extern void rxSV_HSTART();
 extern char      *handshakeStr;
 extern char      *resendStr;
-extern uint8_t   *handshakeFileName;
-extern uint8_t   *resendFileName;
-extern FILE      *handshakeFile;
-extern FILE      *resendFile;
 extern uint8_t   *readBuf;
 extern char      *allGoodStr;
 extern options_t  opts;
@@ -48,3 +56,4 @@ extern options_t  opts;
 #define RED    "\x1b[31m"
 #define GREEN  "\x1b[32m"
 #define RESET  "\x1b[0m"
+extern uint8_t globalParityOffset;

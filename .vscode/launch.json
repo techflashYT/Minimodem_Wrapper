@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/bin/tfModemTransfer",
-			"args": ["test", "r", "300", "2.25"],
+			"args": ["test", "t", "300", "2.25"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

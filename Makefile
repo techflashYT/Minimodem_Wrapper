@@ -2,9 +2,9 @@ CC       = gcc
 WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign
 FEATURE  = -fdiagnostics-color=always -fstack-protector-all -fsanitize=address,undefined -march=core2
 INCLUDES = -Isrc/include -Isrc/libs/libfec
-LIBS     = -L src/libs/libfec/ -lm -l:libfec.a -lasan -lasan -lubsan
+LIBS     = -L src/libs/libfec/ -lm -l:libfec.a
 # GLIBCDIR = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib
-CFLAGS   = $(WARN) $(FEATURE) $(INCLUDES) -g -std=gnu2x
+CFLAGS   = $(WARN) $(FEATURE) $(INCLUDES) -O0 -g -std=gnu2x
 # CRTFILES = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crt1.o /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crti.o /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crtn.o -l:libc.so -lgcc -lasan -lm
 vpath %.c src
 vpath %.h src/include

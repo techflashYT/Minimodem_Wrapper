@@ -1,125 +1,100 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
-#include <string.h>
 #include <minimodem.h>
-#include <errno.h>
-#include <sys/stat.h>
-char *tmpDataFile;
-char *stderrLog;
-char *tmpScriptName;
-#define cleanupAndFail()\
-	remove(stderrLog);\
-	remove(tmpDataFile);\
-	remove(tmpScriptName);\
-	free(command);\
-	free(buffer);\
-	free(pipeStr);\
-	exit(1);
+uint8_t globalParityOffset = 25;
+bool minimodem(uint8_t *data, size_t size, bool mode, uint16_t baudRate, double confidence) {
+    // Create ECC object
+    ecc_t ecc = eccCreate(globalParityOffset, size);
 
-bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence) {
-	char *command = malloc(300 + size);
-	char *buffer  = malloc(size);
-	char *confBuf = malloc(10);
-	char *pipeStr = malloc(128);
+    // determine the mode
+    char modeStr[3] = { '-', 'A', '\0' };
+    if (mode == MODE_TRANSMIT) {
+        modeStr[1] = 't';
+    } else if (mode == MODE_RECEIVE) {
+        modeStr[1] = 'r';
+    }
 
-	if (buffer == NULL || command == NULL || confBuf == NULL || pipeStr == NULL) {
-		fprintf(stderr, "%smalloc() call failed!%s.  Are you out of memory?\r\n", RED, RESET);
-		exit(1);
-	}
+    // Build the command string
+    char command[256];
+    snprintf(command, sizeof(command), "minimodem --rx-one --startbits 2 --stopbits 2 %s %u -c %.3f", modeStr, baudRate, confidence);
 
-	tmpDataFile   = malloc(34);
-	stderrLog     = malloc(34);
-	tmpScriptName = malloc(34);
-	strcpy(tmpDataFile, "/tmp/TechflashMinimodemTmp_XXXXXX");
-	strcpy(stderrLog, "/tmp/TechflashMinimodemTmp_XXXXXX");
-	strcpy(tmpScriptName, "/tmp/TechflashMinimodemTmp_XXXXXX");
-	// we close those 2 instantly, since we don't need them open, the shell script will be using them.
-	close(mkstemp(tmpDataFile));
-	close(mkstemp(stderrLog));
+    // Open the command as a bidirectional stream
+    FILE *stream = popen(command, mode == MODE_TRANSMIT ? "w" : "r");
+    if (stream == NULL) {
+        perror("popen");
+        exit(1);
+    }
 
-	errno = 0; // reset errno in case it got messed up by something else
-	FILE *fp = fdopen(mkstemp(tmpScriptName), "w+");
-	char modeChar = '\0';
-	if (fp == 0 || errno != 0) {
-		fprintf(stderr, "%sFailed to open temporary file!%s\r\nDebug Info:\r\n- Return Value: %p\r\n", RED, RESET, fp);
-		perror("- perror()");
-		cleanupAndFail();
-	}
+    if (mode == MODE_TRANSMIT) {
+        // Transmit mode - encode data and write to the process's standard input
+        uint8_t *encodedData;
+        size_t encodedSize = eccEncode(ecc, data, size, &encodedData);
+        fwrite(encodedData, sizeof(uint8_t), encodedSize, stream);
+        fflush(stream);
 
-	if      (mode == MODE_RECEIVE)  {modeChar = 'r';}
-	else if (mode == MODE_TRANSMIT) {modeChar = 't';}
+        // Free the encoded data memory
+        free(encodedData);
+    } else if (mode == MODE_RECEIVE) {
+        // Receive mode - read data from the process's standard output
+        size_t totalBytesRead = 0;
+        size_t bytesRead;
+        while ((bytesRead = fread(readBuf, sizeof(uint8_t), 16384, stream)) > 0) {
+            // Decode received data
+            uint8_t *decodedData;
+            size_t decodedSize = eccDecode(ecc, readBuf, bytesRead, &decodedData);
 
-	// if we're receiving, don't send anything to minimodem's stdin.
-	pipeStr[0] = '\0';
-	if (mode == MODE_TRANSMIT) {sprintf(pipeStr, "cat %s | ", (char *)file);}
-	// DEBUG STUFF REMOVE THIS LATER
-	if (mode == MODE_TRANSMIT) {
-		FILE *junkfp = fopen(file, "r");
-		uint8_t *dataStuff = malloc(2048);
-		memset(dataStuff, 0, 2048);
-		fread(dataStuff, 2048, 1, junkfp);
-		fclose(junkfp);
-		printf("Sending the following data:\r\n=====================\r\n%s\r\n=====================\r\n", dataStuff);
-		free(dataStuff);
-	}
-	fprintf(fp, "#!/bin/bash\n%sminimodem -%c %u -c %.3f --rx-one --startbits 2 --stopbits 2 2> >(tee %s >&2) > >(tee %s >&1)\n", pipeStr, modeChar, baudRate, confidence, stderrLog, tmpDataFile);
+            // Process the decoded data as needed
+            // ...
 
-	free(confBuf);
+            // Free the decoded data memory
+            free(decodedData);
 
-	chmod(tmpScriptName, 0777);
+            totalBytesRead += bytesRead;
+        }
+    }
 
-	errno = 0; // reset errno in case it got messed up by something else
-	int ret = fclose(fp);
-	if (ret != 0 || errno != 0) {
-		fprintf(stderr, "%sFailed to close temporary file!%s\r\nDebug Info:\r\n- Return Value: %d\r\n", RED, RESET, ret);
-		perror("- perror()");
-		cleanupAndFail();
-	}
+    // Close the stream
+    int closeStatus = pclose(stream);
+    if (closeStatus == -1) {
+        perror("pclose");
+        exit(1);
+    }
 
-	ret = system(tmpScriptName);
-	int errnoBak = errno;
-	if (ret != 0) {
-		fprintf(stderr, "%sError running minimodem!%s  Perhaps it's not installed?\r\nDebug Info:\r\n- Return Value: %u\r\n", RED, RESET, (uint8_t)ret);
-		errno = errnoBak;
-		perror("- perror()");
-		cleanupAndFail();
-	}
+    // Cleanup ECC object
+    eccDestroy(ecc);
 
-	// clean up temp variables
-	free(command);
-	free(buffer);
-	free(pipeStr);
-	
-	// were we trying to read data?  if so, `file` is a buffer, and `size` is it's size
-	if (mode == MODE_RECEIVE) {
-		fp = fopen(tmpDataFile, "r");
-		// get file size
-		fseek(fp, 0, SEEK_END);
-		size_t sizeOfFile = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		memset(file, '\0', size);
-		if (sizeOfFile > size) {
-			// size of the file is bigger than expected!  abort before we blow past the end of the buffer
-			fprintf(stderr, "%sUh oh!  We received %s%lu%s more bytes than we have room for!  Aborting before bad things happen!%s\r\n", RED, B_CYAN, sizeOfFile - size, RED, RESET);
-			fclose(fp);
-			remove(stderrLog);
-			free(stderrLog);
-			remove(tmpDataFile);
-			free(tmpDataFile);
-			remove(tmpScriptName);
-			free(tmpScriptName);
-			exit(1);
-		}
-		fread(file, size, 1, fp);
-		fclose(fp);
-	}
+    // Wait for the child process to complete
+    pid_t childPid = -1;
+    int status;
+    childPid = fork();
+    if (childPid == -1) {
+        perror("fork");
+        exit(1);
+    } else if (childPid == 0) {
+        // Child process
+        // ...
+        exit(0);
+    } else {
+        // Parent process
+        childPid = waitpid(childPid, &status, 0);
+        if (childPid == -1) {
+            perror("waitpid");
+            exit(1);
+        }
+    }
 
-	remove(stderrLog);
-	free(stderrLog);
-	remove(tmpDataFile);
-	free(tmpDataFile);
-	remove(tmpScriptName);
-	free(tmpScriptName);
-	return true;
+    if (WIFEXITED(status)) {
+        int exitStatus = WEXITSTATUS(status);
+        // Handle the exit status as needed
+    } else if (WIFSIGNALED(status)) {
+        int signalNumber = WTERMSIG(status);
+        // Handle the termination due to a signal
+    }
+
+    return false;
 }
