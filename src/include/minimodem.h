@@ -8,7 +8,15 @@
 #define handshakeBaudRate   ((uint16_t)40)
 #define handshakeConfidence ((double)2.25)
 extern bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence);
-void eccEncode(void *data, size_t dataSize, uint8_t parityPercent);
+typedef struct {
+	void *rsPtr;
+	uint16_t parityBytes;
+} __ecc_t;
+typedef __ecc_t *ecc_t;
+ecc_t   eccCreate  (uint8_t parityPercent, size_t dataSize);
+size_t  eccEncode  (ecc_t rs, void *data, size_t dataSize, uint8_t **encodedDataPtr);
+void    eccDestroy (ecc_t rs);
+size_t  eccDecode  (ecc_t rs, uint8_t *encodedData, size_t dataSize, uint8_t **decodedDataPtr);
 typedef struct {
 	uint16_t baudRate;
 	float    confidence;

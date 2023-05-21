@@ -6,7 +6,8 @@
 		"*.h": "c",
 		"atomic": "c",
 		"compare": "c",
-		"cstdint": "c"
+		"cstdint": "c",
+		"algorithm": "c"
 	},
 	"cSpell.words": [
 		"Minimodem",

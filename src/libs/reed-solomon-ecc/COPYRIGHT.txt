@@ -1,2 +1,0 @@
-I got these files from https://github.com/paneda/libcorrect/tree/minor_fixes (it has fixes and is fully up to date with everything compared to upstream [which seems to be dead])
-They are licensed via the BSD-3-Clause License (see LICENSE)
