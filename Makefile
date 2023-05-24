@@ -1,5 +1,5 @@
 CC       = gcc
-WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign
+WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign -Wno-char-subscripts
 FEATURE  = -fdiagnostics-color=always -fstack-protector-all -fsanitize=address,undefined -march=core2
 INCLUDES = -Isrc/include -Isrc/libs/libfec
 LIBS     = -L src/libs/libfec/ -lm -l:libfec.a

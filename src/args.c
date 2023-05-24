@@ -29,14 +29,14 @@ options_t figureOutArgs(int argc, char *argv[]) {
 	}
 	if      (argv[2][0] == 'r') {retVal.mode = MODE_RECEIVE;}
 	else if (argv[2][0] == 't') {retVal.mode = MODE_TRANSMIT;}
-	for (uint16_t i = 0; i != strlen(argv[3]); i++) {
+	for (uint_fast8_t i = 0; i != strlen(argv[3]); i++) {
 		if (!(isdigit(argv[3][i])) && argv[3][i] != '.') {
 			fprintf(stderr, "%sThird argument must be an %sinteger or decimal number%s.%s\r\n", RED, B_CYAN, RED, RESET);
 			exit(1);
 		}
 	}
 	retVal.baudRate   = atoi(argv[3]);
-	for (uint16_t i = 0; i != strlen(argv[4]); i++) {
+	for (uint_fast8_t i = 0; i != strlen(argv[4]); i++) {
 		if (!(isdigit(argv[4][i])) && argv[4][i] != '.') {
 			fprintf(stderr, "%sFourth argument must be an %sinteger or decimal number%s.%s\r\n", RED, B_CYAN, RED, RESET);
 			exit(1);
