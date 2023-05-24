@@ -37,12 +37,15 @@ typedef struct {
 	char	*additionalArgs;
 } options_t;
 extern options_t figureOutArgs(int argc, char *argv[]);
-extern void handshakeSv();
-extern void rxCL_HSTART();
-extern void txSV_HSTART();
 extern void handshakeCl();
 extern void txCL_HSTART();
 extern void rxSV_HSTART();
+
+extern void handshakeSv();
+extern void rxCL_HSTART();
+extern void txSV_HSTART();
+extern void rxCL_TFMMWVer();
+
 extern char      *handshakeStr;
 extern char      *resendStr;
 extern uint8_t   *readBuf;
