@@ -46,7 +46,7 @@ bool minimodem(uint8_t *data, size_t size, bool mode, uint16_t baudRate, double 
         while ((bytesRead = fread(readBuf, sizeof(uint8_t), 16384, stream)) > 0) {
             // Decode received data
             uint8_t *decodedData;
-            size_t decodedSize = eccDecode(ecc, readBuf, bytesRead, &decodedData);
+            eccDecode(ecc, readBuf, bytesRead, &decodedData);
 
             // Process the decoded data as needed
             // ...
@@ -86,14 +86,6 @@ bool minimodem(uint8_t *data, size_t size, bool mode, uint16_t baudRate, double 
             perror("waitpid");
             exit(1);
         }
-    }
-
-    if (WIFEXITED(status)) {
-        int exitStatus = WEXITSTATUS(status);
-        // Handle the exit status as needed
-    } else if (WIFSIGNALED(status)) {
-        int signalNumber = WTERMSIG(status);
-        // Handle the termination due to a signal
     }
 
     return false;
