@@ -40,6 +40,7 @@ extern options_t figureOutArgs(int argc, char *argv[]);
 extern void handshakeCl();
 extern void txCL_HSTART();
 extern void rxSV_HSTART();
+extern void txCL_TFMMWVer();
 
 extern void handshakeSv();
 extern void rxCL_HSTART();

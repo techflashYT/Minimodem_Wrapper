@@ -19,7 +19,7 @@ void rxSV_HSTART() {
 			break;
 		}
 		
-		printf("Huh?  We got \"\"\"%s\"\"\" when we expected \"\"\"%s\"\"\".  Retrying...\r\n", readBuf, handshakeStr);
+		printf("Huh?  We got nonsense when we expected \"\"\"%s\"\"\".  Retrying...\r\n", handshakeStr);
 		minimodem(resendStr, strlen(resendStr), MODE_TRANSMIT, handshakeBaudRate, handshakeConfidence);
 	}
 	if (!SV_HSTART_worked) {
