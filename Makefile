@@ -1,6 +1,9 @@
 CC       = gcc
 WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign -Wno-char-subscripts
-FEATURE  = -fdiagnostics-color=always -fstack-protector-all -fsanitize=address,undefined -march=core2
+FEATURE  = -fdiagnostics-color=always -fstack-protector-all -march=core2
+ifneq ($(shell gcc -dumpmachine), x86_64-pc-cygwin)
+	FEATURE += -fsanitize=address,undefined
+endif
 INCLUDES = -Isrc/include -Isrc/libs/libfec
 LIBS     = -L src/libs/libfec/ -lm -l:libfec.a
 # GLIBCDIR = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib
@@ -22,7 +25,7 @@ src/libs/libfec/libfec.so:
 bin/$(outFileName): $(compile)
 	@mkdir -p $(@D)
 	@echo "CC    $^ => $@"
-	@$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 
 
 
