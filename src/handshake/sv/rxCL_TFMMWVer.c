@@ -22,13 +22,13 @@ void rxCL_TFMMWVer() {
 	bool gotCL_TFMMWVer = false;
 	for (uint8_t i = 0; i != 5; i++) {
 		printf("Waiting for CL_TFMMWVer (attempt %u)\r\n", i);
-		minimodem(readBuf, strlen(exampleVer), MODE_RECEIVE, handshakeBaudRate, handshakeConfidence);
+		minimodem(readBuf, strlen(exampleVer), MODE_RECEIVE, opts.baudRate, handshakeConfidence);
 		if (validVerNum()) {
 			gotCL_TFMMWVer = true;
 			break;
 		}
 		printf("Huh?  We got nonsense when we expected \"\"\"%s\"\"\".  Retrying...\r\n", handshakeStr);
-		minimodem(resendStr, strlen(resendStr), MODE_TRANSMIT, handshakeBaudRate, handshakeConfidence);
+		minimodem(resendStr, strlen(resendStr), MODE_TRANSMIT, opts.baudRate, handshakeConfidence);
 		globalParityOffset += 15;
 	}
 	if (!gotCL_TFMMWVer) {

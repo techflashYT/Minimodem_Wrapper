@@ -4,9 +4,10 @@
 #include <stdint.h>
 #define MODE_TRANSMIT true
 #define MODE_RECEIVE  false
-#define handshakeBaudRate   ((uint16_t)40)
 #define handshakeConfidence ((double)2.25)
 extern bool minimodem(uint8_t *file, size_t size, bool mode, uint16_t baudRate, double confidence);
+extern void txBad(const char *correctStr);
+extern bool checkResend(void (*callback)());
 typedef struct {
 	void *rsPtr;
 	uint16_t parityBytes;

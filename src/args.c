@@ -51,5 +51,6 @@ options_t figureOutArgs(int argc, char *argv[]) {
 	printf("Freeing %s%lu%s bytes from temporary buffer for additional arguments\r\n", B_CYAN, 2048 - (strlen(retVal.additionalArgs) + 1), RESET);
 	retVal.additionalArgs = realloc(retVal.additionalArgs, strlen(retVal.additionalArgs) + 1);
 	retVal.confidence = atof(argv[4]);
+
 	return retVal;
 }

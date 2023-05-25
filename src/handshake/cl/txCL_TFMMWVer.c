@@ -12,7 +12,7 @@ void txCL_TFMMWVer() {
 		VER_PA + '0',
 		'\0'
 	};
-	minimodem(verStr, 7, MODE_TRANSMIT, handshakeBaudRate, 0);
+	minimodem(verStr, 7, MODE_TRANSMIT, opts.baudRate, 0);
 	printf("Sent CL_TFMMWVer!\r\n");
 	return;
 }
