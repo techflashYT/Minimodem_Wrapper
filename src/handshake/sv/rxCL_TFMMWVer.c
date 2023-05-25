@@ -13,6 +13,7 @@ static bool validVerNum() {
 		readBuf [4] != '.' || 
 		(readBuf[5] >  '1' || readBuf[5] < '9')
 	) {
+		puts("Invalid version number");
 		return false;
 	}
 	return true;
@@ -29,7 +30,7 @@ void rxCL_TFMMWVer() {
 			gotCL_TFMMWVer = true;
 			break;
 		}
-		txBad("v");
+		txBad(verStr);
 	}
 	if (!gotCL_TFMMWVer) {
 		fprintf(stderr, "%sClient never sent version number!  %sDid the client machine crash?  %sIf it did, please %sreport it!%s\r\n", RED, B_CYAN, RESET, B_CYAN, RESET);
