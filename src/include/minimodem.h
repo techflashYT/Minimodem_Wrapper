@@ -62,3 +62,4 @@ extern options_t  opts;
 #define GREEN  "\x1b[32m"
 #define RESET  "\x1b[0m"
 extern uint8_t globalParityOffset;
+extern char verStr[];

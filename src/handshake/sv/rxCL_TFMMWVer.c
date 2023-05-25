@@ -23,13 +23,13 @@ void rxCL_TFMMWVer() {
 	for (uint8_t i = 0; i != 5; i++) {
 		printf("Waiting for CL_TFMMWVer (attempt %u)\r\n", i);
 		minimodem(readBuf, strlen(exampleVer), MODE_RECEIVE, opts.baudRate, handshakeConfidence);
+		readBuf[4095] = '\0';
+		checkResend(txSV_HSTART);
 		if (validVerNum()) {
 			gotCL_TFMMWVer = true;
 			break;
 		}
-		printf("Huh?  We got nonsense when we expected \"\"\"%s\"\"\".  Retrying...\r\n", handshakeStr);
-		minimodem(resendStr, strlen(resendStr), MODE_TRANSMIT, opts.baudRate, handshakeConfidence);
-		globalParityOffset += 15;
+		txBad("v");
 	}
 	if (!gotCL_TFMMWVer) {
 		fprintf(stderr, "%sClient never sent version number!  %sDid the client machine crash?  %sIf it did, please %sreport it!%s\r\n", RED, B_CYAN, RESET, B_CYAN, RESET);

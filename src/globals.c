@@ -8,3 +8,12 @@ char      *resendStr    = "RESENDRESENDRESENDRESENDRESENDRESENDRESENDRESENDRESEN
 char      *allGoodStr   = "GOOD";
 uint8_t   *readBuf;
 options_t  opts;
+char verStr[] = {
+	'v',
+	VER_MA + '0',
+	'.',
+	VER_MI + '0',
+	'.',
+	VER_PA + '0',
+	'\0'
+};
