@@ -1,3 +1,4 @@
 [submodule "src/libs/libfec"]
 	path = src/libs/libfec
 	url = https://github.com/quiet/libfec
+	ignore = dirty

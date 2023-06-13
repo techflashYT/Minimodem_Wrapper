@@ -1,6 +1,6 @@
 {
 	"editor.suggest.snippetsPreventQuickSuggestions": false,
-	"aiXcoder.showTrayIcon": true,
+	"git.ignoredRepositories": ["src/libs/libfec"],
 	"files.associations": {
 		"*.S": "gas",
 		"*.h": "c",
