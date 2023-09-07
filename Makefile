@@ -1,37 +1,16 @@
-CC       = gcc
-WARN     = -Wall -Wextra -Wstack-protector -Wformat=2 -Wformat-security -Werror -Wno-error=unused-variable -Wno-pointer-sign -Wno-char-subscripts
-FEATURE  = -fdiagnostics-color=always -fstack-protector-all -march=core2
-ifneq ($(shell gcc -dumpmachine), x86_64-pc-cygwin)
-	FEATURE += -fsanitize=address,undefined
-endif
-INCLUDES = -Isrc/include -Isrc/libs/libfec
-LIBS     = -L src/libs/libfec/ -lm -l:libfec.a
-# GLIBCDIR = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib
-CFLAGS   = $(WARN) $(FEATURE) $(INCLUDES) -O0 -g -std=gnu2x
-# CRTFILES = /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crt1.o /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crti.o /opt/TechflashSoftware/crossCompiler/x86_64-linux/lib/crtn.o -l:libc.so -lgcc -lasan -lm
-vpath %.c src
-vpath %.h src/include
-SHELL=/bin/bash
-compile  := $(patsubst src/%.c,build/%.o,$(shell find src -name '*.c' | grep -v "src/libs/"))
-# compile  += "build/libs/reed-solomon-ecc/rs.c"
-includes := $(shell find src/include -type f)
-outFileName=tfModemTransfer
+CC = gcc
+LD = gcc
 
-.SUFFIXES: .c .o
-all: src/libs/libfec/libfec.so bin/$(outFileName)
-	@echo "Built!"
-src/libs/libfec/libfec.so:
-	@cd src/libs/libfec; ./configure; make $(MAKEOPTS)
-bin/$(outFileName): $(compile)
+CFILES = $(shell find src/ -name '*.c')
+
+OBJ = $(patsubst src/%.c,build/%.o,$(CFILES))
+
+bin/tfmmw: $(OBJ)
+	$(info $s  LD    $(subst build/,,$^) ==> $@)
 	@mkdir -p $(@D)
-	@echo "CC    $^ => $@"
-	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+	@$(LD) $(LDFLAGS) $^ -o $@
 
-
-
-build/%.o: %.c $(includes)
+build/%.o: src/%.c
+	$(info $s  CC    $(subst src/,,$^) $(subst build/,,$@))
 	@mkdir -p $(@D)
-	@echo "CC    $< => $@"
-	@$(CC) $(CFLAGS) -c $< -o $@
-clean:
-	@rm -rf build bin
+	@$(CC) $(CFLAGS) -c $^ -o $@
