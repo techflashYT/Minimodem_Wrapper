@@ -1,0 +1,1 @@
+extern int CMD_Parse(int argc, char *argv[]);
