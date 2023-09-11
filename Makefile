@@ -2,7 +2,7 @@ CC = gcc
 LD = gcc
 
 CFILES = $(shell find src/ -name '*.c')
-CFLAGS = -O2 -g -Isrc/include -Wall -Wextra -fsanitize=address,undefined
+CFLAGS = -O2 -g -Isrc/include -Wall -Wextra -fsanitize=address,undefined -include src/include/config.h
 LDFLAGS= -lasan -lubsan
 
 OBJ = $(patsubst src/%.c,build/%.o,$(CFILES))

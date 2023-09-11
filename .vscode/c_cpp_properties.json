@@ -9,7 +9,10 @@
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++23",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "forcedInclude": [
+                "src/include/config.h"
+            ]
         }
     ],
     "version": 4
