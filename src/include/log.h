@@ -22,8 +22,8 @@ static void __attribute_maybe_unused__ _log(char *file, int line, char *msg) {
 }
 
 static void __attribute_maybe_unused__ _warn(char *file, int line, char *msg) {
-	char *msgPre = RESET;
-	char *msgPost = "";
+	char *msgPre = YELLOW;
+	char *msgPost = RESET;
 	LOG_CODE
 }
 

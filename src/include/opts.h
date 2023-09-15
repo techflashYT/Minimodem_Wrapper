@@ -1,3 +1,12 @@
-#define MODE_UNSET 0
-#define MODE_RX    1
-#define MODE_TX    2
+#include <stdint.h>
+typedef struct {
+	enum {
+		MODE_RX = 0,
+		MODE_TX = 1,
+		MODE_UNSET = 0xFF
+	} mode;
+
+	uint32_t baudRate;
+	
+} opts_t;
+extern opts_t opts;

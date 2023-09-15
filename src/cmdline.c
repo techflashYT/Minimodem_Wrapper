@@ -7,11 +7,11 @@
 #include <log.h>
 #include <opts.h>
 
+opts_t opts;
+bool gotBaudRate;
+
 #define argIs(x) strcmp(arg, x) == 0
 static void (*nextArgHandler)(char *arg) = NULL;
-static int ARG_Mode = MODE_UNSET;
-static uint64_t ARG_BaudRate = 0;
-static bool gotBaudRate = false;
 
 static void ARG_ParseBaudRate(char *arg) {
 	char *validTest = NULL;
@@ -31,7 +31,7 @@ static void ARG_ParseBaudRate(char *arg) {
 		error("Invalid baud rate specified", true);
 	}
 	debug("Found valid baud rate");
-	ARG_BaudRate = result;
+	opts.baudRate = result;
 }
 
 static void ARG_Parse(char *arg) {
@@ -41,16 +41,16 @@ static void ARG_Parse(char *arg) {
 		return;
 	}
 	if (argIs("-r") || argIs("--rx") || argIs("--receive")) {
-		if (ARG_Mode != MODE_UNSET) {
+		if (opts.mode != MODE_UNSET) {
 			error("You can't specify the mode twice!", true);
 		}
-		ARG_Mode = MODE_RX;
+		opts.mode = MODE_RX;
 	}
 	else if (argIs("-t") || argIs("--tx") || argIs("--transmit")) {
-		if (ARG_Mode != MODE_UNSET) {
+		if (opts.mode != MODE_UNSET) {
 			error("You can't specify the mode twice!", true);
 		}
-		ARG_Mode = MODE_TX;
+		opts.mode = MODE_TX;
 	}
 	else if (argIs("-b") || argIs("--baud") || argIs("--rate") || argIs("--speed")) {
 		if (gotBaudRate) {
@@ -67,6 +67,10 @@ static void ARG_Parse(char *arg) {
 	
 }
 void CMD_Parse(int argc, char *argv[]) {
+	// set up default values
+	opts.mode = MODE_UNSET;
+	opts.baudRate = 0;
+
 	for (int i = 1; i != argc; i++) {
 		ARG_Parse(argv[i]);
 	}
@@ -77,9 +81,9 @@ void CMD_Parse(int argc, char *argv[]) {
 		
 		debug("Options:");
 		
-		if (ARG_Mode == MODE_RX) {modestr = "Receive";}
-		else if (ARG_Mode == MODE_TX) {modestr = "Transmit";}
-		else if (ARG_Mode == MODE_UNSET) {modestr = "!!! Unset !!!"; err = true;}
+		if (opts.mode == MODE_RX) {modestr = "Receive";}
+		else if (opts.mode == MODE_TX) {modestr = "Transmit";}
+		else if (opts.mode == MODE_UNSET) {modestr = "Unset"; err = true;}
 		else {modestr = "!!! Invalid value !!!"; err = true;}
 		snprintf(tmp, sizeof(tmp), "  - Mode: %s", modestr);
 
@@ -89,15 +93,15 @@ void CMD_Parse(int argc, char *argv[]) {
 		else {
 			debug(tmp);
 		}
-		snprintf(tmp, sizeof(tmp), "  - Baud Rate: %lu", ARG_BaudRate);
+		snprintf(tmp, sizeof(tmp), "  - Baud Rate: %u", opts.baudRate);
 		debug(tmp);
 	#endif
 	// all options parsed, check for anything unset
-	if (ARG_Mode == MODE_UNSET) {
+	if (opts.mode == MODE_UNSET) {
 		error("You must specify a mode", true);
 	}
-	if (ARG_BaudRate == 0) {
+	if (opts.baudRate == 0) {
 		error("You must specify a baud rate", true);
 	}
-	return 0;
+	return;
 }
