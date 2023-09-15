@@ -21,17 +21,13 @@ void PKT_Assemble(packet_t *pktMem, uint8_t eccPercent, uint8_t *data, size_t da
 	pktMem->magic[0] = 'T';
 	pktMem->magic[1] = 'F';
 
-	pktMem->eccPercent = 20;
-	pktMem->packetSize = ((dataSize + 63) & -64);
+	// pktMem->eccPercent = 20;
+	pktMem->packetSize = dataSize;
 	
 	memcpy(pktMem->data, data, dataSize);
 
-	int padding = pktMem->packetSize - dataSize;
-	if (padding != 0) {
-		memset(pktMem->data + dataSize, 0, padding);
-	}
 	pktMem->crc32chksum = 0;
-	pktMem->crc32chksum = CHK_GenCRC32((uint8_t *)pktMem, pktMem->packetSize);
+	pktMem->crc32chksum = CHK_GenCRC32((uint8_t *)pktMem, dataSize);
 
 	debug("Packet created");
 }

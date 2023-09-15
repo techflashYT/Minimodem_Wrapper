@@ -8,7 +8,11 @@
 #define CYAN "\e[36m"
 #define RED "\e[31m"
 
-#define LOG_CODE printf("%s[%s%s%s:%s%d%s] %s%s%s\r\n", YELLOW, RESET GREEN, file, RESET, CYAN, line, YELLOW, msgPre, msg, msgPost); 
+#define LOG_CODE \
+	char tmp[64]; \
+	snprintf(tmp, sizeof(tmp), "%s%s:%s%d", file, RESET, CYAN, line); \
+	printf("%s[%s%-23s%s] %s%s%s\r\n", YELLOW, RESET GREEN, tmp, YELLOW, msgPre, msg, msgPost);
+ 
 static void __attribute_maybe_unused__ _debug(char *file, int line, char *msg) {
 	char *msgPre = RESET;
 	char *msgPost = "";

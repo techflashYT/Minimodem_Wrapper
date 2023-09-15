@@ -7,12 +7,18 @@ typedef struct {
 	// ASCII {'T', 'F'}
 	char magic[2];
 
-	// multiples of 64, based on how much data to send
-	// this maxes out at 16320 bytes, which is a ton for one packet.
+	// this maxes out at 255 bytes, which is a ton for one packet.
 	uint8_t packetSize;
 
-	// percentage of ECC data
-	uint8_t eccPercent;
+	// bitfield of status bits
+	uint8_t statusOK     : 1;
+	uint8_t statusErr    : 1;
+	uint8_t statusResent : 1;
+	uint8_t statusRsrvd1 : 1;
+	uint8_t statusRsrvd2 : 1;
+	uint8_t statusRsrvd3 : 1;
+	uint8_t statusRsrvd4 : 1;
+	uint8_t statusRsrvd5 : 1;
 
 	// CRC32 Checksum
 	uint32_t crc32chksum;

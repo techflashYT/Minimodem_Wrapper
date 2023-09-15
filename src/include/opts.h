@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 typedef struct {
-	enum {
+	enum mode_t {
 		MODE_RX = 0,
 		MODE_TX = 1,
 		MODE_UNSET = 0xFF

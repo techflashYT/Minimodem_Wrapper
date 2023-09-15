@@ -10,9 +10,11 @@ void CL_Start() {
 }
 
 static void CL_Handshake() {
+	// use the stack instead of wasting an entire heap allocation on 64 bytes
+	uint8_t pktBuf[64];
+	packet_t *pkt = (packet_t *)&pktBuf;
 	// CL_HELLO
 	// - Say hi to the server, see if there's anybody listening on the other end.
-	packet_t *pkt = malloc(64);
 
 	// hello info
 	uint8_t data[] = {
@@ -28,5 +30,5 @@ static void CL_Handshake() {
 	PKT_Assemble(pkt, 25, data, sizeof(data));
 	debug("made hello packet");
 
-	free(pkt);
+	minimodem_TX(pkt);
 }

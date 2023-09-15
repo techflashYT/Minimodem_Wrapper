@@ -9,11 +9,11 @@ int main(int argc, char *argv[]) {
 	CMD_Parse(argc, argv);
 	debug("Command line parsed, entering client/server main loop");
 	if (opts.mode == MODE_RX) {
-		debug("Starting server");
+		log("Starting server");
 		SRV_Start();
 	}
 	else {
-		debug("Starting client");
+		log("Starting client");
 		CL_Start();
 	}
 
